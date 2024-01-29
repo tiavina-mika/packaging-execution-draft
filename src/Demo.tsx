@@ -1,6 +1,10 @@
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc)
 
 const section1 = { id: "s01", name: "s01" }
 const section2 = { id: "s02", name: "s02" }
@@ -15,7 +19,7 @@ const productionStepExecutions = [
       { id: "pi1", name: "pi1" }
     ],
     section: section1,
-    productionDate: "25/01/24",
+    productionDate: "25/01/2024",
     isSectionLastStep: true,
   },
   // pse 2
@@ -27,7 +31,7 @@ const productionStepExecutions = [
       { id: "pi3", name: "pi3" },
     ],
     section: section2,
-    productionDate: "25/01/24",
+    productionDate: "25/01/2024",
     isSectionLastStep: true,
   },
   // pse 3
@@ -38,7 +42,7 @@ const productionStepExecutions = [
       { id: "pi1", name: "pi1" }
     ],
     section: section3,
-    productionDate: "25/01/24",
+    productionDate: "25/01/2024",
   },
     // pse 4
     {
@@ -48,11 +52,12 @@ const productionStepExecutions = [
         { id: "pi1", name: "pi1" }
       ],
       section: section3,
-      productionDate: "25/01/24",
+      productionDate: "25/01/2024",
       isSectionLastStep: true,
     },
 ]
 
+// @ts-ignore
 const groupPSEByRecipe = (productionDate) => {
 	const pses = productionStepExecutions.filter(pse => pse.productionDate === productionDate)
 
@@ -66,31 +71,44 @@ const groupPSEByRecipe = (productionDate) => {
 }
 // const recipesMap = groupPSEByRecipe('25/01/24')
 
-const createPE = () => {
-  const recipesMap = groupPSEByRecipe('25/01/24')
+// @ts-ignore
+const createPE = (productionDate) => {
+  const recipesMap = groupPSEByRecipe(productionDate)
   const packagings = []
-  for (const pses of Object.values(Object.fromEntries(recipesMap))) {
-    const recipe = pses[0].recipe;
-    const productionItems = pses[0].productionItems;
-    const productionDate = pses[0].productionDate;
-    // console.log("key", key)
-    packagings.push({
-      recipe,
-      tempPses: pses,
-      productionItems,
-      sections: recipe.sections.map(section => ({
-        section,
-        productionExecution: pses.find(p => p.section.id === section.id && p.isSectionLastStep)?.productionStep
-      })),
-      productionDate
-    })
+  for (const day of [0, 1]) {
+    for (const pses of Object.values(Object.fromEntries(recipesMap))) {
+      const recipe = pses[0].recipe;
+      const productionItems = pses[0].productionItems;
+      const productionDate = pses[0].productionDate;
+      // console.log("key", key)
+      packagings.push({
+        recipe,
+        tempPses: pses,
+        productionItems,
+        sections: recipe.sections.map(section => ({
+          section,
+          productionExecution: pses.find(p => p.section.id === section.id && p.isSectionLastStep)?.productionStep
+        })),
+        productionDate,
+        packaginDate: dayjs(productionDate).utc().add(day, 'days').startOf("day").valueOf(),
+      })
+    }
   }
 
   return packagings
 }
 
 // console.log("pses", Object.fromEntries(pses))
-console.log("pses", createPE())
+const productionDate = dayjs(dayjs().subtract(4, 'days').valueOf()).format("DD/MM/YYYY")
+const packagingExecutions = createPE(productionDate)
+console.log("packagingExecutions", packagingExecutions.map(p => {
+  return { ...p,
+    recipe: p.recipe.name,
+    packaginDate: dayjs(p.packaginDate).utc().format("DD/MM/YYYY HH:mm"),
+    // productionDate: p.producio
+  }
+}))
+
 export default function TextButtons() {
   return (
     <Stack direction="row" spacing={2}>
