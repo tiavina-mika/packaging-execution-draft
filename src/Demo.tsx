@@ -12,9 +12,9 @@ const productionDate = dayjs()
   .subtract(4, "days")
   .startOf("day")
   .valueOf();
-const section1 = { id: "s01", name: "s01" };
-const section2 = { id: "s02", name: "s02" };
-const section3 = { id: "s03", name: "s03" };
+const section1 = { id: "s01", name: "s01", netWeight: 100 };
+const section2 = { id: "s02", name: "s02", netWeight: 150 };
+const section3 = { id: "s03", name: "s03", netWeight: 80 };
 
 const productionStepExecutions = [
   // pse 1
@@ -77,12 +77,6 @@ const groupPSEByRecipe = (productionDate) => {
 };
 
 const createPE = (productionDate) => {
-  console.log(
-    "productionDate",
-    dayjs(dayjs(productionDate).utc().startOf("day").valueOf()).format(
-      "DD/MM/YYYY HH:mm"
-    )
-  );
   const recipesMap = groupPSEByRecipe(productionDate);
   const packagings = [];
   for (const day of [0, 1]) {
@@ -92,17 +86,23 @@ const createPE = (productionDate) => {
       const recipe = recipeProductionStepExecutions[0].recipe;
       const productionItems = recipeProductionStepExecutions[0].productionItems;
       const productionDate = recipeProductionStepExecutions[0].productionDate;
+
+      const sections = recipe.sections.map((section) => ({
+        section,
+        sectionWeight: section.netWeight,
+        productionExecution: recipeProductionStepExecutions.find(
+          (p) => p.section.id === section.id && p.isSectionLastStep
+        )?.productionStep
+      }));
+
       packagings.push({
         recipe,
+        recipeName: recipe.name,
         tempPses: recipeProductionStepExecutions,
         productionItems,
-        sections: recipe.sections.map((section) => ({
-          section,
-          productionExecution: recipeProductionStepExecutions.find(
-            (p) => p.section.id === section.id && p.isSectionLastStep
-          )?.productionStep
-        })),
+        sections,
         productionDate,
+        status: "LOCKED",
         packaginDate: dayjs(productionDate)
           .utc()
           .add(day, "days")
