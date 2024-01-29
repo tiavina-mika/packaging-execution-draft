@@ -76,18 +76,20 @@ const createPE = (productionDate) => {
   const recipesMap = groupPSEByRecipe(productionDate);
   const packagings = [];
   for (const day of [0, 1]) {
-    for (const pses of Object.values(Object.fromEntries(recipesMap))) {
-      const recipe = pses[0].recipe;
-      const productionItems = pses[0].productionItems;
-      const productionDate = pses[0].productionDate;
+    for (const recipeProductionStepExecutions of Object.values(
+      Object.fromEntries(recipesMap)
+    )) {
+      const recipe = recipeProductionStepExecutions[0].recipe;
+      const productionItems = recipeProductionStepExecutions[0].productionItems;
+      const productionDate = recipeProductionStepExecutions[0].productionDate;
       // console.log("key", key)
       packagings.push({
         recipe,
-        tempPses: pses,
+        tempPses: recipeProductionStepExecutions,
         productionItems,
         sections: recipe.sections.map((section) => ({
           section,
-          productionExecution: pses.find(
+          productionExecution: recipeProductionStepExecutions.find(
             (p) => p.section.id === section.id && p.isSectionLastStep
           )?.productionStep
         })),
